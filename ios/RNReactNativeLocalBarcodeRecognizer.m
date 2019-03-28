@@ -38,30 +38,36 @@ RCT_EXPORT_METHOD(decode:(NSString *)base64EncodedImage
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
     UIImage* image =[self decodeBase64ToImage:base64EncodedImage];
-    ZXLuminanceSource *source = [[ZXCGImageLuminanceSource alloc] initWithCGImage:image.CGImage];
-    ZXBinaryBitmap *bitmap = [ZXBinaryBitmap binaryBitmapWithBinarizer:[ZXHybridBinarizer binarizerWithSource:source]];
-    // There are a number of hints we can give to the reader, including
-    // possible formats, allowed lengths, and the string encoding.
-    ZXDecodeHints *hints = [ZXDecodeHints hints];
-    NSError *error = nil;
-    ZXMultiFormatReader *reader = [ZXMultiFormatReader reader];
-    ZXResult *result = [reader decode:bitmap
-                                hints:hints
-                                error:&error];
-    if (result) {
-        // The coded result as a string. The raw data can be accessed with
-        // result.rawBytes and result.length.
-        NSString *contents = result.text;
+    
+    for (int i = 0; i < 4; i++)
+    {
+        ZXLuminanceSource *source = [[ZXCGImageLuminanceSource alloc] initWithCGImage:image.CGImage];
+        ZXBinaryBitmap *bitmap = [ZXBinaryBitmap binaryBitmapWithBinarizer:[ZXHybridBinarizer binarizerWithSource:source]];
         
-        // The barcode format, such as a QR code or UPC-A
-        //ZXBarcodeFormat format = result.barcodeFormat;
-        resolve(contents);
-    } else {
-        // Use error to determine why we didn't get a result, such as a barcode
-        // not being found, an invalid checksum, or a format inconsistency.
-        resolve(@"");
+        // There are a number of hints we can give to the reader, including
+        // possible formats, allowed lengths, and the string encoding.
+        ZXDecodeHints *hints = [ZXDecodeHints hints];
+        NSError *error = nil;
+        
+        ZXMultiFormatReader *reader = [ZXMultiFormatReader reader];
+        ZXResult *result = [reader decode:bitmap hints:hints error:&error];
+        
+        if (result) {
+            // The coded result as a string. The raw data can be accessed with
+            // result.rawBytes and result.length.
+            NSString *contents = result.text;
+            
+            // The barcode format, such as a QR code or UPC-A
+            //ZXBarcodeFormat format = result.barcodeFormat;
+            resolve(contents);
+            return;
+        }
+        image = [self image:image RotatedByDegrees:90];
     }
     
+    // Use error to determine why we didn't get a result, such as a barcode
+    // not being found, an invalid checksum, or a format inconsistency.
+    resolve(@"");
 }
 
 - (UIImage *)decodeBase64ToImage:(NSString *)strEncodeData {
@@ -69,5 +75,29 @@ RCT_EXPORT_METHOD(decode:(NSString *)base64EncodedImage
     return [UIImage imageWithData:data];
 }
 
+- (UIImage *)image:(UIImage *)imageToRotate RotatedByDegrees:(CGFloat)degrees
+{
+    CGFloat radians = degrees * (M_PI / 180.0);
+    
+    UIView *rotatedViewBox = [[UIView alloc] initWithFrame:CGRectMake(0,0, imageToRotate.size.height, imageToRotate.size.width)];
+    CGAffineTransform t = CGAffineTransformMakeRotation(radians);
+    rotatedViewBox.transform = t;
+    CGSize rotatedSize = rotatedViewBox.frame.size;
+    
+    UIGraphicsBeginImageContextWithOptions(rotatedSize, NO, [[UIScreen mainScreen] scale]);
+    CGContextRef bitmap = UIGraphicsGetCurrentContext();
+    
+    CGContextTranslateCTM(bitmap, rotatedSize.height / 2, rotatedSize.width / 2);
+    
+    CGContextRotateCTM(bitmap, radians);
+    
+    CGContextScaleCTM(bitmap, 1.0, -1.0);
+    CGContextDrawImage(bitmap, CGRectMake(-imageToRotate.size.width / 2, -imageToRotate.size.height / 2 , imageToRotate.size.height, imageToRotate.size.width), imageToRotate.CGImage );
+    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
+    return newImage;
+}
+
 @end
-  
+
