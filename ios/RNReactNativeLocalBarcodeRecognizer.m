@@ -37,6 +37,14 @@ RCT_EXPORT_METHOD(decode:(NSString *)base64EncodedImage
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
+    dispatch_queue_t queue = dispatch_queue_create("com.yourdomain.yourappname", NULL);
+    dispatch_async(queue, ^{
+        [self decodeBarCode:base64EncodedImage options:options resolver:resolve rejecter:reject];
+    });
+}
+
+- (void)decodeBarCode:(NSString *)base64EncodedImage options:(NSDictionary *)options resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject
+{
     UIImage* image =[self decodeBase64ToImage:base64EncodedImage];
     
     for (int i = 0; i < 4; i++)
