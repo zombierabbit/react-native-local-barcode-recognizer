@@ -4,6 +4,9 @@
 #import <AVFoundation/AVFoundation.h>
 #import "RNReactNativeLocalBarcodeRecognizer.h"
 #import <ZXingObjC/ZXingObjC.h>
+
+#include <stdlib.h>
+
 @implementation RNReactNativeLocalBarcodeRecognizer
 
 - (dispatch_queue_t)methodQueue
@@ -37,7 +40,10 @@ RCT_EXPORT_METHOD(decode:(NSString *)base64EncodedImage
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 {
-    dispatch_queue_t queue = dispatch_queue_create("com.yourdomain.yourappname", NULL);
+    int queueIndex = arc4random_uniform(74);
+    const char *queueName = [[NSString stringWithFormat:@"%d",queueIndex] UTF8String];
+    
+    dispatch_queue_t queue = dispatch_queue_create(queueName, NULL);
     dispatch_async(queue, ^{
         UIImage* image =[self decodeBase64ToImage:base64EncodedImage];
         
