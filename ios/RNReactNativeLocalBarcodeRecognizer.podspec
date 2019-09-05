@@ -1,4 +1,3 @@
-
 Pod::Spec.new do |s|
   s.name         = "RNReactNativeLocalBarcodeRecognizer"
   s.version      = "1.0.0"
@@ -12,7 +11,7 @@ Pod::Spec.new do |s|
   s.author             = { "author" => "author@domain.cn" }
   s.platform     = :ios, "7.0"
   s.source       = { :git => "https://github.com/author/RNReactNativeLocalBarcodeRecognizer.git", :tag => "master" }
-  s.source_files  = "RNReactNativeLocalBarcodeRecognizer/**/*.{h,m}"
+  s.source_files  = "*.{h,m}"
   s.requires_arc = true
 
 
@@ -20,5 +19,3 @@ Pod::Spec.new do |s|
   #s.dependency "others"
 
 end
-
-  
